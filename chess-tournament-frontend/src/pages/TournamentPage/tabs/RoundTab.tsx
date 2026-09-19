@@ -31,13 +31,6 @@ export default function RoundTab() {
 
   return (
     <Box>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 2 }}>
-        <IconButton onClick={() => navigate(`/tournaments/${tournament.id}/rounds`)}>
-          <ArrowBackIcon />
-        </IconButton>
-        <strong>Раунд {round.number}</strong>
-      </Stack>
-
       {isAdmin && round.status === 'completed' && (
         <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
           {!editMode ? (
