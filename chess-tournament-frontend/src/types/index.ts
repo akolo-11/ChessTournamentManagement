@@ -41,11 +41,14 @@ export interface Tournament {
   name: string;
   type: TournamentType;
   status: TournamentStatus;
+  useRating: boolean;
   startDate: string;        // ISO
   endDate?: string;
+  startTime?: string;
   timeControl: TimeControl;
   location: string;
   totalRounds: number;
+  maxPlayers?: number;
   players: Player[];
   rounds: Round[];
   closedEarly?: boolean;

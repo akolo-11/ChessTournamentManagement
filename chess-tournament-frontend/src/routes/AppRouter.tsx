@@ -6,6 +6,7 @@ import SummaryTab from '../pages/TournamentPage/tabs/Summary';
 import PlayersTab from '../pages/TournamentPage/tabs/PlayersTab';
 import ResultsTab from '../pages/TournamentPage/tabs/ResultsTab';
 import RoundTab from '../pages/TournamentPage/tabs/RoundTab';
+import CreateTournamentPage from '../pages/admin/CreateTournamentPage';
 
 export default function AppRouter() {
   return (
@@ -21,7 +22,7 @@ export default function AppRouter() {
             <Route path="rounds/:roundNumber" element={<RoundTab />} />
           </Route>
 
-          <Route path="/admin/tournaments/create" element={<div>Создание (TODO)</div>} />
+          <Route path="/admin/tournaments/create" element={<CreateTournamentPage/>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
