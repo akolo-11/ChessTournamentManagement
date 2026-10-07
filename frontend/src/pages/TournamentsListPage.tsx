@@ -1,7 +1,7 @@
 import { Box, Card, CardContent, Chip, Stack, Typography, Grid, Button } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { mockTournaments } from '../data/mockData';
-import { formatTimeControl, getTimeControlCategory, categoryLabels } from '../utils/timeControl';
+import { formattime_control, gettime_controlCategory, categoryLabels } from '../utils/time_control';
 import { useAuth } from '../hooks/useAuth';
 
 const statusLabels = {
@@ -34,7 +34,7 @@ export default function TournamentsListPage() {
 
       <Grid container spacing={3}>
         {mockTournaments.map(t => {
-          const category = getTimeControlCategory(t.timeControl);
+          const category = gettime_controlCategory(t.time_control);
           return (
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={t.id}>
               <Card component={RouterLink} to={`/tournaments/${t.id}`} sx={{ display: 'block', textDecoration: 'none', height: '100%' }}>
@@ -47,7 +47,7 @@ export default function TournamentsListPage() {
                   <Typography variant="h6" sx={{ mb: 0.5 }}>{t.name}</Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t.location}</Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {t.startDate} · {formatTimeControl(t.timeControl)}
+                    {t.start_date} · {formattime_control(t.time_control)}
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1.5 }}>
                     {t.status === 'registration'

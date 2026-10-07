@@ -8,7 +8,7 @@ export function exportTournamentToPdf(tournament: Tournament) {
   doc.setFontSize(14);
   doc.text(tournament.name, 14, 18);
   doc.setFontSize(10);
-  doc.text(`${tournament.location} · ${tournament.startDate}`, 14, 24);
+  doc.text(`${tournament.location} · ${tournament.start_date}`, 14, 24);
 
   const standings = getStandings(tournament);
   autoTable(doc, {

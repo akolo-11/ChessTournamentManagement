@@ -1,13 +1,13 @@
-import type { TimeControl } from '../types';
+import type { time_control } from '../types';
 
-export type TimeControlCategory = 'bullet' | 'blitz' | 'rapid' | 'classical';
+export type time_controlCategory = 'bullet' | 'blitz' | 'rapid' | 'classical';
 
-export function formatTimeControl(tc: TimeControl): string {
+export function formattime_control(tc: time_control): string {
   if (tc.label) return tc.label;
   return `${tc.baseMinutes}+${tc.incrementSeconds}`;
 }
 
-export function getTimeControlCategory(tc: TimeControl): TimeControlCategory {
+export function gettime_controlCategory(tc: time_control): time_controlCategory {
   const totalMinutes = tc.baseMinutes + (tc.incrementSeconds * 40) / 60;
   if (totalMinutes < 3) return 'bullet';
   if (totalMinutes < 10) return 'blitz';
@@ -15,7 +15,7 @@ export function getTimeControlCategory(tc: TimeControl): TimeControlCategory {
   return 'classical';
 }
 
-export const categoryLabels: Record<TimeControlCategory, string> = {
+export const categoryLabels: Record<time_controlCategory, string> = {
   bullet: 'Пуля',
   blitz: 'Блиц',
   rapid: 'Рапид',

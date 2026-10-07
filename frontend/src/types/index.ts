@@ -5,7 +5,7 @@ export type TournamentStatus = 'draft' | 'registration' | 'active' | 'finished';
 export type RoundStatus = 'pending' | 'in-progress' | 'completed';
 export type MatchResult = '1-0' | '0-1' | '½-½' | '*' | 'bye';
 
-export interface TimeControl {
+export interface time_control {
   baseMinutes: number;
   incrementSeconds: number;
   label?: string;
@@ -41,14 +41,14 @@ export interface Tournament {
   name: string;
   type: TournamentType;
   status: TournamentStatus;
-  useRating: boolean;
-  startDate: string;        // ISO
-  endDate?: string;
-  startTime?: string;
-  timeControl: TimeControl;
+  use_rating: boolean;
+  start_date: string;        // ISO
+  end_date?: string;
+  start_time?: string;
+  time_control: time_control;
   location: string;
   totalRounds: number;
-  maxPlayers?: number;
+  max_players?: number;
   players: Player[];
   rounds: Round[];
   closedEarly?: boolean;

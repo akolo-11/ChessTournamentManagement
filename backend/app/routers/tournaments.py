@@ -1,64 +1,88 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
-from ..models import (
-    Tournament, TournamentCreate, PlayerCreate, Player, TimeControl, Round,
-)
-from ..storage import storage
+from .. import crud, models, schemas
+from ..database import get_db
+from ..dependencies import get_tournament_or_404
 
 router = APIRouter(prefix="/api/tournaments", tags=["tournaments"])
 
 
-@router.get("", response_model=list[Tournament])
-def list_tournaments() -> list[Tournament]:
-    return storage.list()
+@router.get("", response_model=list[schemas.TournamentListOut])
+def list_tournaments(db: Session = Depends(get_db)):
+    tournaments = crud.list_tournaments(db)
+    return [
+        schemas.TournamentListOut(
+            id=t.id, name=t.name, type=t.type, status=t.status,
+            start_date=t.start_date, end_date=t.end_date,
+            location=t.location, total_rounds=t.total_rounds,
+            players_count=len(t.players),
+        )
+        for t in tournaments
+    ]
 
 
-@router.get("/{tournament_id}", response_model=Tournament)
-def get_tournament(tournament_id: str) -> Tournament:
-    tournament = storage.get(tournament_id)
-    if tournament is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Турнир не найден")
-    return tournament
+@router.get("/{tournament_id}", response_model=schemas.TournamentOut)
+def get_tournament(tournament: models.Tournament = Depends(get_tournament_or_404)):
+    return _to_out(tournament)
 
 
-@router.post("", response_model=Tournament, status_code=status.HTTP_201_CREATED)
-def create_tournament(data: TournamentCreate) -> Tournament:
-    return storage.create(data)
+@router.post("", response_model=schemas.TournamentOut, status_code=status.HTTP_201_CREATED)
+def create_tournament(data: schemas.TournamentCreate, db: Session = Depends(get_db)):
+    tournament = crud.create_tournament(db, data)
+    return _to_out(tournament)
 
 
-@router.post("/{tournament_id}/players", response_model=Player, status_code=201)
-def add_player(tournament_id: str, data: PlayerCreate) -> Player:
+@router.delete("/{tournament_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_tournament(
+    tournament: models.Tournament = Depends(get_tournament_or_404),
+    db: Session = Depends(get_db),
+):
+    crud.delete_tournament(db, tournament.id)
+
+
+@router.post("/{tournament_id}/start", response_model=schemas.TournamentOut)
+def start_tournament(
+    tournament: models.Tournament = Depends(get_tournament_or_404),
+    db: Session = Depends(get_db),
+):
     try:
-        player = storage.add_player(tournament_id, data.name, data.rating, data.federation)
+        tournament = crud.start_tournament(db, tournament)
     except ValueError as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
-    if player is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Турнир не найден")
-    return player
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+    return _to_out(tournament)
 
 
-@router.delete("/{tournament_id}/players/{player_id}", status_code=204)
-def remove_player(tournament_id: str, player_id: str) -> None:
-    tournament = storage.get(tournament_id)
-    if tournament is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Турнир не найден")
-    tournament.players = [p for p in tournament.players if p.id != player_id]
-    return None
+@router.post("/{tournament_id}/rounds/{round_number}/finish")
+def finish_round(
+    round_number: int,
+    tournament: models.Tournament = Depends(get_tournament_or_404),
+    db: Session = Depends(get_db),
+):
+    try:
+        return crud.finish_round(db, tournament, round_number)
+    except LookupError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-
-@router.post("/{tournament_id}/start", response_model=Tournament)
-def start_tournament(tournament_id: str) -> Tournament:
-    """Перевод из registration в active, создание раунда 1."""
-    from datetime import datetime
-    tournament = storage.get(tournament_id)
-    if tournament is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Турнир не найден")
-    if tournament.status != "registration":
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Турнир уже запущен или завершён")
-    if len(tournament.players) < 2:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Нужно минимум 2 участника")
-
-    tournament.status = "active"
-    first_round = Round(number=1, status="in-progress", announced_at=datetime.utcnow())
-    tournament.rounds.append(first_round)
-    return tournament
+def _to_out(t: models.Tournament) -> schemas.TournamentOut:
+    return schemas.TournamentOut(
+        id=t.id, name=t.name, type=t.type, status=t.status,
+        start_date=t.start_date, end_date=t.end_date, start_time=t.start_time,
+        location=t.location, total_rounds=t.total_rounds,
+        max_players=t.max_players, use_rating=t.use_rating,
+        time_control=schemas.time_control(
+            base_minutes=t.tc_base_minutes,
+            increment_seconds=t.tc_increment_seconds,
+            label=t.tc_label,
+        ),
+        players=[schemas.PlayerOut.model_validate(p) for p in t.players],
+        rounds=[
+            schemas.RoundOut(
+                id=r.id, number=r.number, status=r.status, announced_at=r.announced_at,
+                matches=[schemas.MatchOut.model_validate(m) for m in r.matches],
+            )
+            for r in t.rounds
+        ],
+    )

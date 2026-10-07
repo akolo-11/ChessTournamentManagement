@@ -1,7 +1,7 @@
 import { Box, Stack, Typography, Chip, Tabs, Tab, Alert } from '@mui/material';
 import { Outlet, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getTournament } from '../../data/helpers';
-import { formatTimeControl, getTimeControlCategory, categoryLabels } from '../../utils/timeControl';
+import { formattime_control, gettime_controlCategory, categoryLabels } from '../../utils/time_control';
 import { useAuth } from '../../hooks/useAuth';
 
 import { IconButton } from '@mui/material';
@@ -45,7 +45,7 @@ export default function TournamentPage() {
       : location.pathname.startsWith(`/tournaments/${id}/${t.path}`)
   )?.path ?? '';
 
-  const category = getTimeControlCategory(tournament.timeControl);
+  const category = gettime_controlCategory(tournament.time_control);
 
   const visibleRounds = tournament.rounds.filter(r => r.status !== 'pending' || r.matches.length > 0);// rounds visible for pairings/results
   const currentRoundMatch = location.pathname.match(/\/rounds\/(\d+)/);
@@ -61,9 +61,9 @@ export default function TournamentPage() {
       <Typography variant="h4">{tournament.name}</Typography>
 
       <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5, mb: 3 }}>
-        {tournament.location} · {tournament.startDate}
-        {tournament.endDate ? ` — ${tournament.endDate}` : ''} ·
-        Контроль: {formatTimeControl(tournament.timeControl)} ·
+        {tournament.location} · {tournament.start_date}
+        {tournament.end_date ? ` — ${tournament.end_date}` : ''} ·
+        Контроль: {formattime_control(tournament.time_control)} ·
         Туров: {tournament.totalRounds}
       </Typography>
 
