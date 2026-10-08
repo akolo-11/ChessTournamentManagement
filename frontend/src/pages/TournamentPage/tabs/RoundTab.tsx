@@ -1,8 +1,7 @@
 import {
   Box, Table, TableHead, TableRow, TableCell, TableBody,
-  Chip, Select, MenuItem, Alert, Stack, IconButton, Button
+  Chip, Select, MenuItem, Alert, Stack, Button
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import type { MatchResult, Tournament } from '../../../types';

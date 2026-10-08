@@ -8,54 +8,82 @@ import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { useNavigate } from 'react-router-dom';
 import dayjs, { type Dayjs } from 'dayjs';
 import type { TournamentType } from '../../types';
+import { api } from '../../api/client';
 
 interface FormState {
   name: string;
   type: TournamentType;
   location: string;
-  start_date: Dayjs | null;
-  end_date: Dayjs | null;
-  start_time: Dayjs | null;
+  startDate: Dayjs | null;
+  endDate: Dayjs | null;
+  startTime: Dayjs | null;
   baseMinutes: number;
   incrementSeconds: number;
   totalRounds: number;
-  max_players: number;
-  use_rating: boolean;
+  maxPlayers: number;
+  useRating: boolean;
 }
 
 const initial: FormState = {
   name: '',
   type: 'swiss',
   location: '',
-  start_date: null,
-  end_date: null,
-  start_time: dayjs().hour(10).minute(0),
+  startDate: null,
+  endDate: null,
+  startTime: dayjs().hour(10).minute(0),
   baseMinutes: 90,
   incrementSeconds: 30,
   totalRounds: 7,
-  max_players: 32,
-  use_rating: true,
+  maxPlayers: 32,
+  useRating: true,
 };
 
 export default function CreateTournamentPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState<FormState>(initial);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm(prev => ({ ...prev, [key]: value }));
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name.trim()) return setError('Укажите название');
-    if (!form.start_date) return setError('Укажите дату начала');
-    if (form.end_date && form.end_date.isBefore(form.start_date)) {
+    if (!form.location.trim()) return setError('Укажите место проведения');
+    if (!form.startDate) return setError('Укажите дату начала');
+    if (form.endDate && form.endDate.isBefore(form.startDate)) {
       return setError('Дата окончания раньше начала');
     }
-    if (form.totalRounds < 1) return setError('Минимум 1 раунд');
-    if (form.max_players < 2) return setError('Минимум 2 участника');
+    if (form.totalRounds < 1 || form.totalRounds > 30) {
+      return setError('Количество раундов: от 1 до 30');
+    }
+    if (form.maxPlayers < 2) return setError('Минимум 2 участника');
 
-    // TODO: отправка на сервер (start_date.toISOString() и т.п.)
-    navigate('/');
+    setError(null);
+    setSubmitting(true);
+
+    try {
+      await api.createTournament({
+        name: form.name.trim(),
+        type: form.type,
+        start_date: form.startDate.format('YYYY-MM-DD'),
+        end_date: form.endDate ? form.endDate.format('YYYY-MM-DD') : null,
+        start_time: form.startTime ? form.startTime.format('HH:mm:ss') : null,
+        time_control: {
+          base_minutes: form.baseMinutes,
+          increment_seconds: form.incrementSeconds,
+        },
+        location: form.location.trim(),
+        total_rounds: form.totalRounds,
+        max_players: form.maxPlayers,
+        use_rating: form.useRating,
+      });
+      navigate('/');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -99,24 +127,24 @@ export default function CreateTournamentPage() {
           <Grid size={{ xs: 12, sm: 4 }}>
             <DatePicker
               label="Дата начала"
-              value={form.start_date}
-              onChange={value => update('start_date', value)}
+              value={form.startDate}
+              onChange={value => update('startDate', value)}
               slotProps={{ textField: { fullWidth: true } }}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 4 }}>
             <DatePicker
               label="Дата окончания"
-              value={form.end_date}
-              onChange={value => update('end_date', value)}
+              value={form.endDate}
+              onChange={value => update('endDate', value)}
               slotProps={{ textField: { fullWidth: true } }}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 4 }}>
             <TimePicker
               label="Время начала"
-              value={form.start_time}
-              onChange={value => update('start_time', value)}
+              value={form.startTime}
+              onChange={value => update('startTime', value)}
               slotProps={{ textField: { fullWidth: true } }}
             />
           </Grid>
@@ -161,8 +189,8 @@ export default function CreateTournamentPage() {
             <TextField
               label="Макс. участников"
               type="number"
-              value={form.max_players}
-              onChange={e => update('max_players', Number(e.target.value))}
+              value={form.maxPlayers}
+              onChange={e => update('maxPlayers', Number(e.target.value))}
               fullWidth
               slotProps={{ htmlInput: { min: 2 } }}
             />
@@ -172,15 +200,17 @@ export default function CreateTournamentPage() {
         <FormControlLabel
           control={
             <Switch
-              checked={form.use_rating}
-              onChange={e => update('use_rating', e.target.checked)}
+              checked={form.useRating}
+              onChange={e => update('useRating', e.target.checked)}
             />
           }
           label="Учитывать рейтинг при жеребьёвке"
         />
 
         <Stack direction="row" spacing={2}>
-          <Button variant="contained" onClick={handleSubmit}>Создать</Button>
+          <Button variant="contained" onClick={handleSubmit} disabled={submitting}>
+            {submitting ? 'Создание…' : 'Создать'}
+          </Button>
           <Button onClick={() => navigate('/')}>Отмена</Button>
         </Stack>
       </Stack>

@@ -1,6 +1,6 @@
-import type { Match, Player, Round, time_control, Tournament } from '../types';
+import type { Match, Player, Round, TimeControl, Tournament } from '../types';
 
-interface Apitime_control {
+interface ApiTimeControl {
   base_minutes: number;
   increment_seconds: number;
   label?: string | null;
@@ -30,6 +30,19 @@ interface ApiRound {
   matches: ApiMatch[];
 }
 
+export interface ApiTournamentListItem {
+  id: string;
+  name: string;
+  type: string;
+  status: string;
+  start_date: string;
+  end_date: string | null;
+  location: string;
+  total_rounds: number;
+  players_count: number;
+  time_control: ApiTimeControl;
+}
+
 interface ApiTournament {
   id: string;
   name: string;
@@ -42,15 +55,16 @@ interface ApiTournament {
   total_rounds: number;
   max_players: number | null;
   use_rating: boolean;
-  time_control: Apitime_control;
+  time_control: ApiTimeControl;
   players: ApiPlayer[];
   rounds: ApiRound[];
 }
 
-function maptime_control(tc: Apitime_control): time_control {
+function mapTimeControl(tc: ApiTimeControl | undefined | null): TimeControl {
+  if (!tc) return { baseMinutes: 0, incrementSeconds: 0 };
   return {
-    baseMinutes: tc.base_minutes,
-    incrementSeconds: tc.increment_seconds,
+    baseMinutes: tc.base_minutes ?? 0,
+    incrementSeconds: tc.increment_seconds ?? 0,
     label: tc.label ?? undefined,
   };
 }
@@ -84,20 +98,37 @@ function mapRound(r: ApiRound): Round {
   };
 }
 
+export function mapTournamentListItem(t: ApiTournamentListItem): Tournament {
+  return {
+    id: t.id,
+    name: t.name,
+    type: t.type as Tournament['type'],
+    status: t.status as Tournament['status'],
+    startDate: t.start_date,
+    endDate: t.end_date ?? undefined,
+    timeControl: mapTimeControl(t.time_control),
+    location: t.location,
+    totalRounds: t.total_rounds,
+    useRating: true,        // список не отдаёт use_rating, ставим дефолт
+    players: [],            // список не отдаёт игроков
+    rounds: [],             // список не отдаёт раунды
+  };
+}
+
 export function mapTournament(t: ApiTournament): Tournament {
   return {
     id: t.id,
     name: t.name,
     type: t.type as Tournament['type'],
     status: t.status as Tournament['status'],
-    start_date: t.start_date,
-    end_date: t.end_date ?? undefined,
-    start_time: t.start_time ?? undefined,
-    time_control: maptime_control(t.time_control),
+    startDate: t.start_date,
+    endDate: t.end_date ?? undefined,
+    startTime: t.start_time ?? undefined,
+    timeControl: mapTimeControl(t.time_control),
     location: t.location,
     totalRounds: t.total_rounds,
-    max_players: t.max_players ?? undefined,
-    use_rating: t.use_rating,
+    maxPlayers: t.max_players ?? undefined,
+    useRating: t.use_rating,
     players: t.players.map(mapPlayer),
     rounds: t.rounds.map(mapRound),
   };

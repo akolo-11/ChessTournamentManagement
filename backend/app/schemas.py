@@ -83,6 +83,7 @@ class TournamentListOut(BaseModel): # for listing
     location: str
     total_rounds: int
     players_count: int = 0
+    time_control: time_control
 
 
 class TournamentOut(BaseModel): # for full view

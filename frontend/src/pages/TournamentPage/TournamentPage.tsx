@@ -1,10 +1,8 @@
-import { Box, Stack, Typography, Chip, Tabs, Tab, Alert } from '@mui/material';
+import { Box, Stack, Typography, Chip, Tabs, Tab, Alert, IconButton, CircularProgress } from '@mui/material';
 import { Outlet, useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getTournament } from '../../data/helpers';
-import { formattime_control, gettime_controlCategory, categoryLabels } from '../../utils/time_control';
+import { useTournament } from '../../hooks/useTournament';
+import { formatTimeControl, getTimeControlCategory, categoryLabels } from '../../utils/timeControl';
 import { useAuth } from '../../hooks/useAuth';
-
-import { IconButton } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import { exportTournamentToExcel } from '../../utils/exportExcel';
@@ -15,6 +13,7 @@ const mainTabs = [
   { label: 'Участники', path: 'players' },
   { label: 'Итоги',     path: 'results' },
 ];
+
 
 const statusLabels = {
   draft: 'Черновик',
@@ -35,8 +34,10 @@ export default function TournamentPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAdmin } = useAuth();
-  const tournament = id ? getTournament(id) : undefined;
-
+  const { tournament, loading, error } = useTournament(id);
+  
+  if (loading) return <CircularProgress />;
+  if (error) return <Alert severity="error">{error}</Alert>;
   if (!tournament) return <Alert severity="error">Турнир не найден</Alert>;
 
   const currentMainTab = mainTabs.find(t =>
@@ -45,36 +46,38 @@ export default function TournamentPage() {
       : location.pathname.startsWith(`/tournaments/${id}/${t.path}`)
   )?.path ?? '';
 
-  const category = gettime_controlCategory(tournament.time_control);
+  const category = getTimeControlCategory(tournament.timeControl);
 
-  const visibleRounds = tournament.rounds.filter(r => r.status !== 'pending' || r.matches.length > 0);// rounds visible for pairings/results
+  const visibleRounds = tournament.rounds.filter(r => r.announcedAt !== null);
   const currentRoundMatch = location.pathname.match(/\/rounds\/(\d+)/);
   const currentRound = currentRoundMatch ? Number(currentRoundMatch[1]) : null;
 
   return (
     <Box>
-      <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
-        <Chip label={statusLabels[tournament.status]} color={statusColors[tournament.status]} size="small" />
-        <Chip label={categoryLabels[category]} variant="outlined" size="small" />
+      <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+        <Stack direction="row" spacing={1}>
+          <Chip label={statusLabels[tournament.status]} color={statusColors[tournament.status]} size="small" />
+          <Chip label={categoryLabels[category]} variant="outlined" size="small" />
+        </Stack>
+
+        <Stack direction="row" spacing={0.5}>
+          <IconButton size="small" onClick={() => exportTournamentToExcel(tournament)} title="Скачать Excel">
+            <DownloadIcon fontSize="small" />
+          </IconButton>
+          <IconButton size="small" onClick={() => exportTournamentToPdf(tournament)} title="Скачать PDF">
+            <PictureAsPdfIcon fontSize="small" />
+          </IconButton>
+        </Stack>
       </Stack>
 
       <Typography variant="h4">{tournament.name}</Typography>
 
       <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5, mb: 3 }}>
-        {tournament.location} · {tournament.start_date}
-        {tournament.end_date ? ` — ${tournament.end_date}` : ''} ·
-        Контроль: {formattime_control(tournament.time_control)} ·
+        {tournament.location} · {tournament.startDate}
+        {tournament.endDate ? ` — ${tournament.endDate}` : ''} ·
+        Контроль: {formatTimeControl(tournament.timeControl)} ·
         Туров: {tournament.totalRounds}
       </Typography>
-
-      <Stack direction="row" spacing={0.5} sx={{ mt: 1 }}>
-        <IconButton size="small" onClick={() => exportTournamentToExcel(tournament)} title="Скачать Excel">
-          <DownloadIcon fontSize="small" />
-        </IconButton>
-        <IconButton size="small" onClick={() => exportTournamentToPdf(tournament)} title="Скачать PDF">
-          <PictureAsPdfIcon fontSize="small" />
-        </IconButton>
-      </Stack>
 
       {/* tournament tabs */}
       <Tabs

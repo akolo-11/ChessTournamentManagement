@@ -25,7 +25,6 @@ class Tournament(Base):
     max_players: Mapped[int | None] = mapped_column(Integer)
     use_rating: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    # Контроль времени — как отдельные колонки (плоско, без лишней таблицы)
     tc_base_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
     tc_increment_seconds: Mapped[int] = mapped_column(Integer, default=0)
     tc_label: Mapped[str | None] = mapped_column(String(50))

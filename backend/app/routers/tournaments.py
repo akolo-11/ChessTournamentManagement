@@ -8,6 +8,28 @@ from ..dependencies import get_tournament_or_404
 router = APIRouter(prefix="/api/tournaments", tags=["tournaments"])
 
 
+def _to_out(t: models.Tournament) -> schemas.TournamentOut:
+    return schemas.TournamentOut(
+        id=t.id, name=t.name, type=t.type, status=t.status,
+        start_date=t.start_date, end_date=t.end_date, start_time=t.start_time,
+        location=t.location, total_rounds=t.total_rounds,
+        max_players=t.max_players, use_rating=t.use_rating,
+        time_control=schemas.time_control(
+            base_minutes=t.tc_base_minutes,
+            increment_seconds=t.tc_increment_seconds,
+            label=t.tc_label,
+        ),
+        players=[schemas.PlayerOut.model_validate(p) for p in t.players],
+        rounds=[
+            schemas.RoundOut(
+                id=r.id, number=r.number, status=r.status, announced_at=r.announced_at,
+                matches=[schemas.MatchOut.model_validate(m) for m in r.matches],
+            )
+            for r in t.rounds
+        ],
+    )
+
+
 @router.get("", response_model=list[schemas.TournamentListOut])
 def list_tournaments(db: Session = Depends(get_db)):
     tournaments = crud.list_tournaments(db)
@@ -17,6 +39,11 @@ def list_tournaments(db: Session = Depends(get_db)):
             start_date=t.start_date, end_date=t.end_date,
             location=t.location, total_rounds=t.total_rounds,
             players_count=len(t.players),
+            time_control=schemas.time_control(          # ← добавить
+                base_minutes=t.tc_base_minutes,
+                increment_seconds=t.tc_increment_seconds,
+                label=t.tc_label,
+            ),
         )
         for t in tournaments
     ]
@@ -65,24 +92,3 @@ def finish_round(
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-def _to_out(t: models.Tournament) -> schemas.TournamentOut:
-    return schemas.TournamentOut(
-        id=t.id, name=t.name, type=t.type, status=t.status,
-        start_date=t.start_date, end_date=t.end_date, start_time=t.start_time,
-        location=t.location, total_rounds=t.total_rounds,
-        max_players=t.max_players, use_rating=t.use_rating,
-        time_control=schemas.time_control(
-            base_minutes=t.tc_base_minutes,
-            increment_seconds=t.tc_increment_seconds,
-            label=t.tc_label,
-        ),
-        players=[schemas.PlayerOut.model_validate(p) for p in t.players],
-        rounds=[
-            schemas.RoundOut(
-                id=r.id, number=r.number, status=r.status, announced_at=r.announced_at,
-                matches=[schemas.MatchOut.model_validate(m) for m in r.matches],
-            )
-            for r in t.rounds
-        ],
-    )

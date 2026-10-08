@@ -1,9 +1,4 @@
-import { mockTournaments } from './mockData';
-import type { Match, Player, Round, Tournament } from '../types';
-
-export function getTournament(id: string): Tournament | undefined {
-  return mockTournaments.find(t => t.id === id);
-}
+import type { Player, Round, Tournament } from '../types';
 
 export function getPlayer(tournament: Tournament, playerId: string): Player | undefined {
   return tournament.players.find(p => p.id === playerId);
@@ -16,14 +11,6 @@ export function getPlayerName(tournament: Tournament, playerId: string | null): 
 
 export function getRound(tournament: Tournament, roundNumber: number): Round | undefined {
   return tournament.rounds.find(r => r.number === roundNumber);
-}
-
-export function getMatch(tournament: Tournament, matchId: string): Match | undefined {
-  for (const round of tournament.rounds) {
-    const match = round.matches.find(m => m.id === matchId);
-    if (match) return match;
-  }
-  return undefined;
 }
 
 /* Очки игрока по результатам партий */
