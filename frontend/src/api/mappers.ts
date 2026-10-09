@@ -109,9 +109,10 @@ export function mapTournamentListItem(t: ApiTournamentListItem): Tournament {
     timeControl: mapTimeControl(t.time_control),
     location: t.location,
     totalRounds: t.total_rounds,
-    useRating: true,        // список не отдаёт use_rating, ставим дефолт
-    players: [],            // список не отдаёт игроков
-    rounds: [],             // список не отдаёт раунды
+    useRating: true,
+    playersCount: t.players_count,
+    players: [],
+    rounds: [],
   };
 }
 

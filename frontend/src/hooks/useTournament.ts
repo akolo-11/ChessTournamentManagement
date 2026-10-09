@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { mapTournament } from '../api/mappers';
 import type { Tournament } from '../types';
@@ -9,8 +9,11 @@ interface State {
   error: string | null;
 }
 
-export function useTournament(id: string | undefined): State {
+export function useTournament(id: string | undefined) {
   const [state, setState] = useState<State>({ tournament: null, loading: true, error: null });
+  const [nonce, setNonce] = useState(0);
+
+  const refetch = useCallback(() => setNonce(n => n + 1), []);
 
   useEffect(() => {
     if (!id) {
@@ -18,8 +21,7 @@ export function useTournament(id: string | undefined): State {
       return;
     }
     let cancelled = false;
-
-    setState({ tournament: null, loading: true, error: null });
+    setState(prev => ({ ...prev, loading: true, error: null }));
 
     api.getTournament(id)
       .then(raw => {
@@ -32,7 +34,7 @@ export function useTournament(id: string | undefined): State {
       });
 
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, nonce]);
 
-  return state;
+  return { ...state, refetch };
 }

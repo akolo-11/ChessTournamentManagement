@@ -1,19 +1,23 @@
-import { Box, Stack, Typography, Chip, Tabs, Tab, Alert, IconButton, CircularProgress } from '@mui/material';
-import { Outlet, useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useTournament } from '../../hooks/useTournament';
-import { formatTimeControl, getTimeControlCategory, categoryLabels } from '../../utils/timeControl';
-import { useAuth } from '../../hooks/useAuth';
+import {
+  Alert, Box, Chip, CircularProgress, IconButton,
+  Stack, Tab, Tabs, Typography,
+} from '@mui/material';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import DownloadIcon from '@mui/icons-material/Download';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import { useTournament } from '../../hooks/useTournament';
+import { useAuth } from '../../hooks/useAuth';
+import { formatTimeControl, getTimeControlCategory, categoryLabels } from '../../utils/timeControl';
 import { exportTournamentToExcel } from '../../utils/exportExcel';
 import { exportTournamentToPdf } from '../../utils/exportPdf';
+import TournamentActions from '../../components/tournament/TournamentActions';
+import AnimatedTabPanel from '../../components/AnimatedTabPanel';
 
 const mainTabs = [
-  { label: 'Главная',    path: '' },
+  { label: 'Главная',   path: '' },
   { label: 'Участники', path: 'players' },
   { label: 'Итоги',     path: 'results' },
 ];
-
 
 const statusLabels = {
   draft: 'Черновик',
@@ -32,25 +36,27 @@ const statusColors = {
 export default function TournamentPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
+  const { pathname } = useLocation();
   const { isAdmin } = useAuth();
-  const { tournament, loading, error } = useTournament(id);
-  
+  const { tournament, loading, error, refetch } = useTournament(id);
+
   if (loading) return <CircularProgress />;
   if (error) return <Alert severity="error">{error}</Alert>;
   if (!tournament) return <Alert severity="error">Турнир не найден</Alert>;
 
-  const currentMainTab = mainTabs.find(t =>
-    t.path === ''
-      ? location.pathname === `/tournaments/${id}`
-      : location.pathname.startsWith(`/tournaments/${id}/${t.path}`)
-  )?.path ?? '';
+  const base = `/tournaments/${id}`;
+  const roundMatch = pathname.match(/\/rounds\/(\d+)/);
+  const currentRound = roundMatch ? Number(roundMatch[1]) : null;
+  const isRoundsPath = currentRound !== null;
+
+  // Активная верхняя вкладка. null — открыт раунд (вкладки не активны).
+  const activeMainTab = mainTabs.find(t =>
+        t.path === '' ? pathname === base : pathname.startsWith(`${base}/${t.path}`)
+      )?.path ?? '';
 
   const category = getTimeControlCategory(tournament.timeControl);
-
   const visibleRounds = tournament.rounds.filter(r => r.announcedAt !== null);
-  const currentRoundMatch = location.pathname.match(/\/rounds\/(\d+)/);
-  const currentRound = currentRoundMatch ? Number(currentRoundMatch[1]) : null;
+  const showRoundsRow = visibleRounds.length > 0;
 
   return (
     <Box>
@@ -79,20 +85,22 @@ export default function TournamentPage() {
         Туров: {tournament.totalRounds}
       </Typography>
 
-      {/* tournament tabs */}
+      {isAdmin && <TournamentActions tournament={tournament} onRefetch={refetch} />}
+
+      {/* Верхние вкладки. value={false} — ни одна не активна, когда открыт раунд. */}
       <Tabs
-        value={currentMainTab}
-        onChange={(_, value) => navigate(`/tournaments/${id}/${value}`.replace(/\/$/, ''))}
+        value={activeMainTab ?? false}
+        onChange={(_, value) => navigate(`${base}/${value}`.replace(/\/$/, ''))}
         sx={{ borderBottom: 1, borderColor: 'divider' }}
       >
         {mainTabs.map(t => <Tab key={t.path} label={t.label} value={t.path} />)}
       </Tabs>
 
-      {/* rounds tabs */}
-      {visibleRounds.length > 0 && currentMainTab === '' && (
+      {/* Раунды — независимая группа. Показываем только на «Главной». */}
+      {showRoundsRow && (
         <Tabs
           value={currentRound ?? false}
-          onChange={(_, value) => navigate(`/tournaments/${id}/rounds/${value}`)}
+          onChange={(_, value) => navigate(`${base}/rounds/${value}`)}
           variant="scrollable"
           scrollButtons="auto"
           sx={{
@@ -109,8 +117,10 @@ export default function TournamentPage() {
         </Tabs>
       )}
 
-      <Box sx={{ mt: currentMainTab === '' && visibleRounds.length > 0 ? 0 : 3 }}>
-        <Outlet context={{ tournament, isAdmin }} />
+      <Box sx={{ mt: showRoundsRow ? 0 : 3 }}>
+        <AnimatedTabPanel tabKey={`${activeMainTab ?? 'round'}-${currentRound ?? ''}`}>
+          <Outlet context={{ tournament, isAdmin, refetch, round: currentRound }} />
+        </AnimatedTabPanel>
       </Box>
     </Box>
   );

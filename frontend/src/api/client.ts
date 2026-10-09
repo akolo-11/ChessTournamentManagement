@@ -25,4 +25,10 @@ export const api = {
     }),
   finishRound: (tid: string, n: number) =>
     request(`/tournaments/${tid}/rounds/${n}/finish`, { method: 'POST' }),
+  finishTournament: (id: string) =>
+  request<unknown>(`/tournaments/${id}/finish`, { method: 'POST' }),
+  generatePairings: (tid: string, roundNumber: number) =>
+  request<unknown>(`/tournaments/${tid}/rounds/${roundNumber}/pairings`, {
+    method: 'POST',
+  }),
 };

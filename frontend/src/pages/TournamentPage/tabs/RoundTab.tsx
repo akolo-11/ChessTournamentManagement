@@ -1,35 +1,91 @@
 import {
-  Box, Table, TableHead, TableRow, TableCell, TableBody,
-  Chip, Select, MenuItem, Alert, Stack, Button
+  Alert, Box, Button, Chip, CircularProgress, MenuItem, Select,
+  Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography
 } from '@mui/material';
-import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import { useOutletContext, useParams } from 'react-router-dom';
 import { useState } from 'react';
-import type { MatchResult, Tournament } from '../../../types';
+import { api } from '../../../api/client';
 import { getPlayerName, getRound } from '../../../data/helpers';
+import type { MatchResult, Round, Tournament } from '../../../types';
 
-interface Ctx { tournament: Tournament; isAdmin: boolean }
+interface Ctx {
+  tournament: Tournament;
+  isAdmin: boolean;
+  refetch: () => void;
+}
 
 const resultLabels: Record<MatchResult, string> = {
   '1-0': '1–0', '0-1': '0–1', '½-½': '½–½', '*': '—', 'bye': 'bye',
 };
 
 export default function RoundTab() {
-  const { tournament, isAdmin } = useOutletContext<Ctx>();
+  const { tournament, isAdmin, refetch } = useOutletContext<Ctx>();
   const { roundNumber } = useParams();
-  const navigate = useNavigate();
   const round = getRound(tournament, Number(roundNumber));
 
-  if (!round) return <Alert severity="error">Раунд не найден</Alert>;
-
   const [editMode, setEditMode] = useState(false);
-  const isLocked = round.status === 'completed' && !editMode;
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [finishing, setFinishing] = useState(false);
+  const [pairing, setPairing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  if (round.announcedAt === null) {
-    return <Alert severity="info">Раунд ещё не объявлен</Alert>;
-  }
+  if (!round) return <Alert severity="error">Раунд не найден</Alert>;
+  if (round.announcedAt === null) return <Alert severity="info">Раунд ещё не объявлен</Alert>;
+
+  const isLocked = round.status === 'completed' && !editMode;
+  const allResultsSet = round.matches.length > 0 && round.matches.every(m => m.result !== '*');
+
+  const announcedRounds = tournament.rounds.filter(r => r.announcedAt !== null);
+  const isLastAnnounced =
+    announcedRounds.length > 0 &&
+    round.number === Math.max(...announcedRounds.map(r => r.number));
+  const canFinishRound =
+    isAdmin && isLastAnnounced && tournament.status !== 'finished' && allResultsSet;
+
+  const handleResultChange = async (matchId: string, result: MatchResult) => {
+    setSavingId(matchId);
+    setError(null);
+    try {
+      await api.updateResult(tournament.id, matchId, result);
+      refetch();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleFinishRound = async () => {
+    if (!confirm(`Завершить раунд ${round.number} и объявить следующий?`)) return;
+    setFinishing(true);
+    setError(null);
+    try {
+      await api.finishRound(tournament.id, round.number);
+      refetch();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setFinishing(false);
+    }
+  };
+
+  const handleGeneratePairings = async () => {
+    setPairing(true);
+    setError(null);
+    try {
+      await api.generatePairings(tournament.id, round.number);
+      refetch();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPairing(false);
+    }
+  };
 
   return (
     <Box>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
       {isAdmin && round.status === 'completed' && (
         <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
           {!editMode ? (
@@ -38,19 +94,36 @@ export default function RoundTab() {
             </Button>
           ) : (
             <>
-              <Button variant="contained" onClick={() => { /* TODO: сохранить */ setEditMode(false); }}>
-                Сохранить
+              <Button variant="contained" onClick={() => setEditMode(false)}>
+                Готово
               </Button>
-              <Button onClick={() => setEditMode(false)}>Отмена</Button>
+              <Button onClick={() => { setEditMode(false); refetch(); }}>
+                Отмена
+              </Button>
             </>
           )}
         </Stack>
       )}
 
       {round.matches.length === 0 ? (
-        <Alert severity="info">Пары ещё не созданы</Alert>
+        isAdmin ? (
+          <Box>
+            <Typography sx={{ color: 'text.secondary' }}>
+              Раунд объявлен, но пары ещё не созданы.
+            </Typography>
+            <Button
+              variant="contained"
+              disabled={pairing}
+              onClick={handleGeneratePairings}
+            >
+              {pairing ? 'Жеребьёвка…' : 'Провести жеребьёвку'}
+            </Button>
+          </Box>
+        ) : (
+          <Typography sx={{ color: 'text.secondary' }}>Жеребьевка еще не проведена</Typography>
+        )
       ) : (
-        <Table>
+        <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell>Доска</TableCell>
@@ -75,13 +148,16 @@ export default function RoundTab() {
                 </TableCell>
                 {isAdmin && (
                   <TableCell align="right">
-                    {m.result === 'bye' ? (
+                    {savingId === m.id ? (
+                      <CircularProgress size={20} />
+                    ) : m.result === 'bye' ? (
                       <span>—</span>
                     ) : (
                       <Select
                         size="small"
-                        defaultValue={m.result}
+                        value={m.result}
                         disabled={isLocked}
+                        onChange={e => handleResultChange(m.id, e.target.value as MatchResult)}
                         sx={{ minWidth: 90 }}
                       >
                         <MenuItem value="*">—</MenuItem>
@@ -96,6 +172,24 @@ export default function RoundTab() {
             ))}
           </TableBody>
         </Table>
+      )}
+
+      {isAdmin && isLastAnnounced && tournament.status !== 'finished' && (
+        <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+          <Button
+            variant="contained"
+            disabled={!canFinishRound || finishing}
+            onClick={handleFinishRound}
+          >
+            {finishing ? 'Завершение…' : 'Завершить раунд'}
+          </Button>
+        </Stack>
+      )}
+
+      {isAdmin && isLastAnnounced && !allResultsSet && tournament.status !== 'finished' && (
+        <Alert severity="info" sx={{ mt: 1 }}>
+          Кнопка будет доступна, когда все партии получат результат
+        </Alert>
       )}
     </Box>
   );

@@ -4,8 +4,8 @@ export const theme = createTheme({
   palette: {
     mode: 'light',
     background: { default: '#faf6f0', paper: '#fffdf9' },
-    primary: { main: '#a86b3c' },      // терракота
-    secondary: { main: '#7a8b6f' },    // оливковый
+    primary: { main: '#a86b3c' },      
+    secondary: { main: '#7a8b6f' },    
     text: { primary: '#2e2a26', secondary: '#7a7169' },
     divider: '#e8dfd3',
   },

@@ -92,3 +92,29 @@ def finish_round(
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.post("/{tournament_id}/finish", response_model=schemas.TournamentOut)
+def finish_tournament(
+    tournament: models.Tournament = Depends(get_tournament_or_404),
+    db: Session = Depends(get_db),
+):
+    try:
+        tournament = crud.finish_tournament(db, tournament)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+    return _to_out(tournament)
+
+@router.post("/{tournament_id}/rounds/{round_number}/pairings", response_model=schemas.TournamentOut)
+def generate_pairings_endpoint(
+    round_number: int,
+    tournament: models.Tournament = Depends(get_tournament_or_404),
+    db: Session = Depends(get_db),
+):
+    try:
+        crud.generate_round_pairings(db, tournament, round_number)
+    except LookupError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+    db.refresh(tournament)
+    return _to_out(tournament)

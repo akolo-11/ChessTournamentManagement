@@ -204,7 +204,7 @@ export default function CreateTournamentPage() {
               onChange={e => update('useRating', e.target.checked)}
             />
           }
-          label="Учитывать рейтинг при жеребьёвке"
+          label="Обсчет рейтинга"
         />
 
         <Stack direction="row" spacing={2}>

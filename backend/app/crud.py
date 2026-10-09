@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select
 
 from . import models, schemas
+from .pairing import generate_pairings
 
 
 # Tournaments
@@ -134,6 +135,13 @@ def finish_round(db: Session, tournament: models.Tournament, round_number: int) 
     db.commit()
     return {"next_round": None, "tournament_finished": True}
 
+def finish_tournament(db: Session, tournament: models.Tournament) -> models.Tournament:
+    if tournament.status == "finished":
+        raise ValueError("Турнир уже завершён")
+    tournament.status = "finished"
+    db.commit()
+    db.refresh(tournament)
+    return tournament
 
 # Matches
 
@@ -150,3 +158,22 @@ def update_result(db: Session, tournament_id: str, match_id: str, result: str) -
     db.commit()
     db.refresh(match)
     return match
+
+def generate_round_pairings(
+    db: Session, tournament: models.Tournament, round_number: int,
+) -> models.Round:
+    """Жеребьёвка для указанного раунда. Сохраняет пары в БД."""
+    round_ = next((r for r in tournament.rounds if r.number == round_number), None)
+    if round_ is None:
+        raise LookupError("Раунд не найден")
+    if round_.matches:
+        raise ValueError("Пары для этого раунда уже созданы")
+
+    matches = generate_pairings(tournament, round_number)
+    for match in matches:
+        match.round_id = round_.id
+    round_.matches = matches
+    round_.status = "in-progress"
+    db.commit()
+    db.refresh(round_)
+    return round_

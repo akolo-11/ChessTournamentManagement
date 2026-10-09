@@ -11,6 +11,7 @@ import {
   formatTimeControl, getTimeControlCategory, categoryLabels,
 } from '../utils/timeControl';
 import { useAuth } from '../hooks/useAuth';
+import { motion } from 'framer-motion';
 
 const statusLabels = {
   draft: 'Черновик',
@@ -61,29 +62,35 @@ export default function TournamentsListPage() {
             const category = getTimeControlCategory(t.timeControl);
             return (
               <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={t.id}>
-                <Card
-                  component={RouterLink}
-                  to={`/tournaments/${t.id}`}
-                  sx={{ display: 'block', textDecoration: 'none', height: '100%' }}
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: 0.05 }}
                 >
-                  <CardContent>
-                    <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
-                      <Chip label={statusLabels[t.status]} color={statusColors[t.status]} size="small" />
-                      <Chip label={categoryLabels[category]} variant="outlined" size="small" />
-                    </Stack>
+                  <Card
+                    component={RouterLink}
+                    to={`/tournaments/${t.id}`}
+                    sx={{ display: 'block', textDecoration: 'none', height: '100%' }}
+                  >
+                    <CardContent>
+                      <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
+                        <Chip label={statusLabels[t.status]} color={statusColors[t.status]} size="small" />
+                        <Chip label={categoryLabels[category]} variant="outlined" size="small" />
+                      </Stack>
 
-                    <Typography variant="h6" sx={{ mb: 0.5 }}>{t.name}</Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t.location}</Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      {t.startDate} · {formatTimeControl(t.timeControl)}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1.5 }}>
-                      {t.status === 'registration'
-                        ? `Зарегистрировано: ${t.playersCount ?? 0}`
-                        : `Участников: ${t.playersCount ?? 0} · Туров: ${t.totalRounds}`}
-                    </Typography>
-                  </CardContent>
-                </Card>
+                      <Typography variant="h6" sx={{ mb: 0.5 }}>{t.name}</Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>{t.location}</Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        {t.startDate} · {formatTimeControl(t.timeControl)}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1.5 }}>
+                        {t.status === 'registration'
+                          ? `Зарегистрировано: ${t.playersCount ?? 0}`
+                          : `Участников: ${t.playersCount ?? 0} · Туров: ${t.totalRounds}`}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </Grid>
             );
           })}

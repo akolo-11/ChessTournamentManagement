@@ -6,6 +6,7 @@ import {
 import { useOutletContext } from 'react-router-dom';
 import type { Tournament } from '../../../types';
 import { getPlayerScore } from '../../../data/helpers';
+import AddPlayerDialog from '../../../components/tournament/AddPlayerDialog'
 
 interface Ctx { tournament: Tournament; isAdmin: boolean }
 
@@ -14,6 +15,8 @@ type SortKey = 'name' | 'rating' | 'score';
 export default function PlayersTab() {
   const { tournament, isAdmin } = useOutletContext<Ctx>();
   const [sortBy, setSortBy] = useState<SortKey>('score');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const rows = useMemo(() => {
     const list = tournament.players.map(p => ({
@@ -41,7 +44,19 @@ export default function PlayersTab() {
           <ToggleButton value="score">По очкам</ToggleButton>
         </ToggleButtonGroup>
         <Box sx={{ flexGrow: 1 }} />
-        {isAdmin && <Button variant="contained">Добавить</Button>}
+        {isAdmin && (
+          <>
+            <Button variant="contained" onClick={() => setDialogOpen(true)}>
+              Добавить участника
+            </Button>
+            <AddPlayerDialog
+              open={dialogOpen}
+              tournamentId={tournament.id}
+              onClose={() => setDialogOpen(false)}
+              onAdded={() => setRefreshKey(k => k + 1)}
+            />
+          </>
+        )}
       </Stack>
 
       <Table size="small">
@@ -66,7 +81,7 @@ export default function PlayersTab() {
               <TableCell align="right"><strong>{score}</strong></TableCell>
               <TableCell>
                 <Chip
-                  label={p.isActive ? 'Активен' : 'Дисквалифицирован'}
+                  label={p.isActive ? 'Активен' : 'Снят с турнира'}
                   color={p.isActive ? 'success' : 'error'}
                   size="small"
                 />
@@ -74,7 +89,7 @@ export default function PlayersTab() {
               {isAdmin && (
                 <TableCell align="right">
                   <Button size="small" color="error" disabled={!p.isActive}>
-                    Дисквалифицировать
+                    Снять с турнира
                   </Button>
                 </TableCell>
               )}
