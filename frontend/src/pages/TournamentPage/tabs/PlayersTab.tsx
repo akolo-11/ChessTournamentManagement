@@ -7,19 +7,19 @@ import { useOutletContext } from 'react-router-dom';
 import type { Tournament } from '../../../types';
 import { getPlayerScore } from '../../../data/helpers';
 import AddPlayerDialog from '../../../components/tournament/AddPlayerDialog'
+import { api } from '../../../api/client';
 
-interface Ctx { tournament: Tournament; isAdmin: boolean }
+interface Ctx { tournament: Tournament; isAdmin: boolean; refetch: () => void; }
 
 type SortKey = 'name' | 'rating' | 'score';
 
 export default function PlayersTab() {
-  const { tournament, isAdmin } = useOutletContext<Ctx>();
+  const { tournament, isAdmin, refetch } = useOutletContext<Ctx>();
   const [sortBy, setSortBy] = useState<SortKey>('score');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const rows = useMemo(() => {
-    const list = tournament.players.map(p => ({
+    const list = tournament.players.map(p => ({ 
       player: p,
       score: getPlayerScore(tournament, p.id),
     }));
@@ -29,6 +29,16 @@ export default function PlayersTab() {
       return b.score - a.score || b.player.rating - a.player.rating;
     });
   }, [tournament, sortBy]);
+
+  const handleRemove = async (playerId: string) => {
+    if (!confirm('Снять игрока с турнира?')) return;
+    try {
+      await api.removePlayer(tournament.id, playerId);
+      refetch();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : String(e));
+    }
+  };
 
   return (
     <Box>
@@ -53,7 +63,7 @@ export default function PlayersTab() {
               open={dialogOpen}
               tournamentId={tournament.id}
               onClose={() => setDialogOpen(false)}
-              onAdded={() => setRefreshKey(k => k + 1)}
+              onAdded={refetch}
             />
           </>
         )}
@@ -67,7 +77,6 @@ export default function PlayersTab() {
             <TableCell align="right">Рейтинг</TableCell>
             <TableCell>Федерация</TableCell>
             <TableCell align="right">Очки</TableCell>
-            <TableCell>Статус</TableCell>
             {isAdmin && <TableCell align="right">Действия</TableCell>}
           </TableRow>
         </TableHead>
@@ -79,16 +88,14 @@ export default function PlayersTab() {
               <TableCell align="right">{p.rating}</TableCell>
               <TableCell>{p.federation}</TableCell>
               <TableCell align="right"><strong>{score}</strong></TableCell>
-              <TableCell>
-                <Chip
-                  label={p.isActive ? 'Активен' : 'Снят с турнира'}
-                  color={p.isActive ? 'success' : 'error'}
-                  size="small"
-                />
-              </TableCell>
               {isAdmin && (
                 <TableCell align="right">
-                  <Button size="small" color="error" disabled={!p.isActive}>
+                  <Button
+                    size="small"
+                    color="error"
+                    disabled={!p.isActive}
+                    onClick={() => handleRemove(p.id)}
+                  >
                     Снять с турнира
                   </Button>
                 </TableCell>

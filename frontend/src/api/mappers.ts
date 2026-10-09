@@ -41,6 +41,7 @@ export interface ApiTournamentListItem {
   total_rounds: number;
   players_count: number;
   time_control: ApiTimeControl;
+  registration_url: string | null;
 }
 
 interface ApiTournament {
@@ -58,6 +59,7 @@ interface ApiTournament {
   time_control: ApiTimeControl;
   players: ApiPlayer[];
   rounds: ApiRound[];
+  registration_url: string | null;
 }
 
 function mapTimeControl(tc: ApiTimeControl | undefined | null): TimeControl {
@@ -113,6 +115,7 @@ export function mapTournamentListItem(t: ApiTournamentListItem): Tournament {
     playersCount: t.players_count,
     players: [],
     rounds: [],
+    registrationUrl: t.registration_url ?? undefined,
   };
 }
 
@@ -132,5 +135,6 @@ export function mapTournament(t: ApiTournament): Tournament {
     useRating: t.use_rating,
     players: t.players.map(mapPlayer),
     rounds: t.rounds.map(mapRound),
+    registrationUrl: t.registration_url ?? undefined,
   };
 }

@@ -1,4 +1,4 @@
-import { Box, Grid, Card, CardContent, Typography, List, ListItem } from '@mui/material';
+import { Box, Grid, Card, CardContent, Typography, List, ListItem, Link } from '@mui/material';
 import { useOutletContext } from 'react-router-dom';
 import type { Tournament } from '../../../types';
 import { getStandings } from '../../../data/helpers';
@@ -18,6 +18,31 @@ export default function SummaryTab() {
 
   return (
     <Box>
+      {tournament.status === 'registration' && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            Регистрация открыта. Участников: {tournament.players.length} из {tournament.maxPlayers ?? '∞'}.
+          </Typography>
+
+          {tournament.registrationUrl ? (
+            <Typography variant="body2">
+              Регистрация:{' '}
+              <Link
+                href={tournament.registrationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {tournament.registrationUrl}
+              </Link>
+            </Typography>
+          ) : (
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Ссылка на форму регистрации не указана. Обратитесь к организатору.
+            </Typography>
+          )}
+        </Box>
+      )}
+
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {stats.map(s => (
           <Grid size={{ xs: 12, sm: 4 }} key={s.label}>

@@ -70,6 +70,7 @@ class TournamentCreate(BaseModel):
     total_rounds: int = Field(..., ge=1, le=30)
     max_players: int | None = Field(None, ge=2)
     use_rating: bool = True
+    registration_url: str | None = Field(None, max_length=500)
 
 
 class TournamentListOut(BaseModel): # for listing
@@ -84,6 +85,7 @@ class TournamentListOut(BaseModel): # for listing
     total_rounds: int
     players_count: int = 0
     time_control: time_control
+    registration_url: str | None = Field(None, max_length=500)
 
 
 class TournamentOut(BaseModel): # for full view
@@ -102,3 +104,4 @@ class TournamentOut(BaseModel): # for full view
     time_control: time_control
     players: list[PlayerOut] = []
     rounds: list[RoundOut] = []
+    registration_url: str | None = Field(None, max_length=500)

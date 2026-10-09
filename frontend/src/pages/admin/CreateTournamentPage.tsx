@@ -22,6 +22,7 @@ interface FormState {
   totalRounds: number;
   maxPlayers: number;
   useRating: boolean;
+  registrationUrl: string;
 }
 
 const initial: FormState = {
@@ -36,6 +37,7 @@ const initial: FormState = {
   totalRounds: 7,
   maxPlayers: 32,
   useRating: true,
+  registrationUrl: '',
 };
 
 export default function CreateTournamentPage() {
@@ -77,6 +79,7 @@ export default function CreateTournamentPage() {
         total_rounds: form.totalRounds,
         max_players: form.maxPlayers,
         use_rating: form.useRating,
+        registration_url: form.registrationUrl.trim() || null,
       });
       navigate('/');
     } catch (e) {
@@ -121,6 +124,16 @@ export default function CreateTournamentPage() {
               fullWidth
             />
           </Grid>
+        </Grid>
+
+        <Grid container spacing={2}>
+          <TextField
+            label="Ссылка на форму регистрации"
+            value={form.registrationUrl}
+            onChange={e => update('registrationUrl', e.target.value)}
+            placeholder="https://forms.gle/..."
+            fullWidth
+          />
         </Grid>
 
         <Grid container spacing={2}>

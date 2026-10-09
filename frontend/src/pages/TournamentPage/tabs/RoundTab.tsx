@@ -32,6 +32,8 @@ export default function RoundTab() {
   if (!round) return <Alert severity="error">Раунд не найден</Alert>;
   if (round.announcedAt === null) return <Alert severity="info">Раунд ещё не объявлен</Alert>;
 
+  const sortedMatches = [...round.matches].sort((a, b) => a.boardNumber - b.boardNumber);
+
   const isLocked = round.status === 'completed' && !editMode;
   const allResultsSet = round.matches.length > 0 && round.matches.every(m => m.result !== '*');
 
@@ -134,7 +136,7 @@ export default function RoundTab() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {round.matches.map(m => (
+            {sortedMatches.map(m => (
               <TableRow key={m.id} hover>
                 <TableCell>{m.boardNumber}</TableCell>
                 <TableCell>{getPlayerName(tournament, m.whitePlayerId)}</TableCell>

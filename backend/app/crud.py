@@ -44,6 +44,7 @@ def create_tournament(db: Session, data: schemas.TournamentCreate) -> models.Tou
         tc_base_minutes=data.time_control.base_minutes,
         tc_increment_seconds=data.time_control.increment_seconds,
         tc_label=data.time_control.label,
+        registration_url=data.registration_url,
     )
     db.add(tournament)
     db.commit()

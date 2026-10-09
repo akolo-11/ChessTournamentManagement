@@ -52,5 +52,6 @@ export interface Tournament {
   playersCount?: number;
   players: Player[];
   rounds: Round[];
+  registrationUrl?: string;
   closedEarly?: boolean;
 }

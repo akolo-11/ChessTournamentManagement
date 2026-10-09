@@ -27,6 +27,7 @@ def _to_out(t: models.Tournament) -> schemas.TournamentOut:
             )
             for r in t.rounds
         ],
+        registration_url=t.registration_url,
     )
 
 
@@ -39,11 +40,12 @@ def list_tournaments(db: Session = Depends(get_db)):
             start_date=t.start_date, end_date=t.end_date,
             location=t.location, total_rounds=t.total_rounds,
             players_count=len(t.players),
-            time_control=schemas.time_control(          # ← добавить
+            time_control=schemas.time_control(
                 base_minutes=t.tc_base_minutes,
                 increment_seconds=t.tc_increment_seconds,
                 label=t.tc_label,
             ),
+            registration_url=t.registration_url,
         )
         for t in tournaments
     ]

@@ -36,6 +36,7 @@ class Tournament(Base):
         back_populates="tournament", cascade="all, delete-orphan",
         order_by="Round.number",
     )
+    registration_url: Mapped[str | None] = mapped_column(String(500))
 
 
 class Player(Base):
