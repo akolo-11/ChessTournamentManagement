@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
   Table, TableHead, TableRow, TableCell, TableBody,
-  Chip, Button, Stack, Box, ToggleButton, ToggleButtonGroup,
+  Button, Stack, Box, ToggleButton, ToggleButtonGroup,
 } from '@mui/material';
 import { useOutletContext } from 'react-router-dom';
 import type { Tournament } from '../../../types';
