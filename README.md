@@ -39,42 +39,6 @@
 - Итоги турнира
 - Экспорт турнирной таблицы в Excel и PDF (в разработке)
 
-## Структура проекта
-
-project/
-├── backend/                  # FastAPI + SQLAlchemy
-│   ├── app/
-│   │   ├── main.py           # точка входа, CORS, роутеры
-│   │   ├── config.py         # настройки из .env
-│   │   ├── database.py       # engine, SessionLocal, Base
-│   │   ├── models.py         # SQLAlchemy-модели
-│   │   ├── schemas.py        # Pydantic-схемы
-│   │   ├── crud.py           # операции с БД
-│   │   ├── pairing.py        # жеребьёвка
-│   │   ├── dependencies.py   # общие зависимости
-│   │   └── routers/          # маршруты API
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   └── .env.example
-├── frontend/                 # React + TypeScript + Vite
-│   ├── src/
-│   │   ├── api/              # client.ts, mappers.ts
-│   │   ├── components/       # Layout, AddPlayerDialog, TournamentActions
-│   │   ├── pages/            # страницы и вкладки
-│   │   ├── hooks/            # useAuth, useTournament
-│   │   ├── data/             # helpers.ts
-│   │   ├── utils/            # timeControl, exportExcel, exportPdf
-│   │   ├── types/            # доменные типы
-│   │   ├── routes/           # AppRouter
-│   │   ├── App.tsx, main.tsx, theme.ts
-│   │   └── index.css
-│   ├── Dockerfile
-│   ├── nginx.conf
-│   └── .env.example
-├── docker-compose.yml
-├── .env.example
-└── README.md
-
 ## Модель данных
 
 **Tournament** — турнир.
