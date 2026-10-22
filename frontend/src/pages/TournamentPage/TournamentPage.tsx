@@ -37,7 +37,7 @@ export default function TournamentPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isJudge } = useAuth();
   const { tournament, loading, error, refetch } = useTournament(id);
 
   if (loading) return <CircularProgress />;
@@ -85,7 +85,7 @@ export default function TournamentPage() {
         Туров: {tournament.totalRounds}
       </Typography>
 
-      {isAdmin && <TournamentActions tournament={tournament} onRefetch={refetch} />}
+      {isJudge && <TournamentActions tournament={tournament} onRefetch={refetch} />}
 
       {/* Верхние вкладки. value={false} — ни одна не активна, когда открыт раунд. */}
       <Tabs
@@ -119,7 +119,7 @@ export default function TournamentPage() {
 
       <Box sx={{ mt: showRoundsRow ? 0 : 3 }}>
         <AnimatedTabPanel tabKey={`${activeMainTab ?? 'round'}-${currentRound ?? ''}`}>
-          <Outlet context={{ tournament, isAdmin, refetch, round: currentRound }} />
+          <Outlet context={{ tournament, refetch, round: currentRound }} />
         </AnimatedTabPanel>
       </Box>
     </Box>

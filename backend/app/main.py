@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 from .config import settings
 from .database import Base, engine
-from .routers import tournaments, players, matches
+from .routers import tournaments, players, matches, auth
 
 Base.metadata.create_all(bind=engine)
 
@@ -21,6 +21,7 @@ app.add_middleware(
 app.include_router(tournaments.router)
 app.include_router(players.router)
 app.include_router(matches.router)
+app.include_router(auth.router)
 
 
 @app.exception_handler(ValueError)

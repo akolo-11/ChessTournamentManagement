@@ -8,13 +8,15 @@ import type { Tournament } from '../../../types';
 import { getPlayerScore } from '../../../data/helpers';
 import AddPlayerDialog from '../../../components/tournament/AddPlayerDialog'
 import { api } from '../../../api/client';
+import { useAuth } from '../../../hooks/useAuth';
 
-interface Ctx { tournament: Tournament; isAdmin: boolean; refetch: () => void; }
+interface Ctx { tournament: Tournament; refetch: () => void; }
 
 type SortKey = 'name' | 'rating' | 'score';
 
 export default function PlayersTab() {
-  const { tournament, isAdmin, refetch } = useOutletContext<Ctx>();
+  const { tournament, refetch } = useOutletContext<Ctx>();
+  const { isAdmin } = useAuth();
   const [sortBy, setSortBy] = useState<SortKey>('score');
   const [dialogOpen, setDialogOpen] = useState(false);
 

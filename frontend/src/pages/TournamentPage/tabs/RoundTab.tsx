@@ -6,11 +6,11 @@ import { useOutletContext, useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { api } from '../../../api/client';
 import { getPlayerName, getRound } from '../../../data/helpers';
-import type { MatchResult, Round, Tournament } from '../../../types';
+import type { MatchResult, Tournament } from '../../../types';
+import { useAuth } from '../../../hooks/useAuth'; // <-- Добавлен импорт
 
 interface Ctx {
   tournament: Tournament;
-  isAdmin: boolean;
   refetch: () => void;
 }
 
@@ -19,8 +19,10 @@ const resultLabels: Record<MatchResult, string> = {
 };
 
 export default function RoundTab() {
-  const { tournament, isAdmin, refetch } = useOutletContext<Ctx>();
+  const { tournament, refetch } = useOutletContext<Ctx>();
   const { roundNumber } = useParams();
+  const { isJudge } = useAuth(); // <-- Берем роль судьи из хука
+  
   const round = getRound(tournament, Number(roundNumber));
 
   const [editMode, setEditMode] = useState(false);
@@ -41,8 +43,9 @@ export default function RoundTab() {
   const isLastAnnounced =
     announcedRounds.length > 0 &&
     round.number === Math.max(...announcedRounds.map(r => r.number));
+
   const canFinishRound =
-    isAdmin && isLastAnnounced && tournament.status !== 'finished' && allResultsSet;
+    isJudge && isLastAnnounced && tournament.status !== 'finished' && allResultsSet;
 
   const handleResultChange = async (matchId: string, result: MatchResult) => {
     setSavingId(matchId);
@@ -88,7 +91,8 @@ export default function RoundTab() {
     <Box>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      {isAdmin && round.status === 'completed' && (
+      {/* Судья может редактировать завершенные результаты */}
+      {isJudge && round.status === 'completed' && (
         <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
           {!editMode ? (
             <Button variant="outlined" onClick={() => setEditMode(true)}>
@@ -108,7 +112,8 @@ export default function RoundTab() {
       )}
 
       {round.matches.length === 0 ? (
-        isAdmin ? (
+        // Судья может проводить жеребьевку
+        isJudge ? (
           <Box>
             <Typography sx={{ color: 'text.secondary' }}>
               Раунд объявлен, но пары ещё не созданы.
@@ -132,7 +137,8 @@ export default function RoundTab() {
               <TableCell>Белые</TableCell>
               <TableCell>Чёрные</TableCell>
               <TableCell>Результат</TableCell>
-              {isAdmin && <TableCell align="right">Действия</TableCell>}
+              {/* Судья видит колонку ввода результатов */}
+              {isJudge && <TableCell align="right">Действия</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -148,7 +154,9 @@ export default function RoundTab() {
                     size="small"
                   />
                 </TableCell>
-                {isAdmin && (
+                
+                {/* Судья может вводить результаты */}
+                {isJudge && (
                   <TableCell align="right">
                     {savingId === m.id ? (
                       <CircularProgress size={20} />
@@ -176,7 +184,8 @@ export default function RoundTab() {
         </Table>
       )}
 
-      {isAdmin && isLastAnnounced && tournament.status !== 'finished' && (
+      {/* Судья видит кнопку завершения раунда */}
+      {isJudge && isLastAnnounced && tournament.status !== 'finished' && (
         <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
           <Button
             variant="contained"
@@ -188,7 +197,7 @@ export default function RoundTab() {
         </Stack>
       )}
 
-      {isAdmin && isLastAnnounced && !allResultsSet && tournament.status !== 'finished' && (
+      {isJudge && isLastAnnounced && !allResultsSet && tournament.status !== 'finished' && (
         <Alert severity="info" sx={{ mt: 1 }}>
           Кнопка будет доступна, когда все партии получат результат
         </Alert>

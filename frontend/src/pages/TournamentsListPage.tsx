@@ -28,7 +28,7 @@ const statusColors = {
 } as const;
 
 export default function TournamentsListPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isJudge } = useAuth();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export default function TournamentsListPage() {
       </Stack>
 
       {tournaments.length === 0 ? (
-        <Alert severity="info">Турниров пока нет</Alert>
+        <Typography variant="body2">Турниров пока нет</Typography>
       ) : (
         <Grid container spacing={3}>
           {tournaments.map(t => {

@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import chessIcon from '../../assets/chess.png';
 
 export default function Layout() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isJudge } = useAuth();
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
