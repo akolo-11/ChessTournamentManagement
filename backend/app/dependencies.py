@@ -32,7 +32,6 @@ def get_current_user(
 
 
 def require_role(*roles: str):
-    """Фабрика зависимостей: пропускает только указанные роли."""
     def checker(user: models.User = Depends(get_current_user)) -> models.User:
         if user.role not in roles:
             raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Недостаточно прав")

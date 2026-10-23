@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from .. import crud, schemas
+from .. import crud, schemas, models
 from ..database import get_db
-from ..dependencies import get_tournament_or_404
+from ..dependencies import get_tournament_or_404, require_judge
 
 router = APIRouter(prefix="/api/tournaments/{tournament_id}/matches", tags=["matches"])
 
@@ -14,6 +14,7 @@ def update_result(
     data: schemas.ResultUpdate,
     tournament=Depends(get_tournament_or_404),
     db: Session = Depends(get_db),
+    _: models.User = Depends(require_judge),
 ):
     match = crud.update_result(db, tournament.id, match_id, data.result)
     if match is None:

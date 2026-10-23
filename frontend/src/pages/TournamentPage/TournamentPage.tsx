@@ -47,9 +47,7 @@ export default function TournamentPage() {
   const base = `/tournaments/${id}`;
   const roundMatch = pathname.match(/\/rounds\/(\d+)/);
   const currentRound = roundMatch ? Number(roundMatch[1]) : null;
-  const isRoundsPath = currentRound !== null;
 
-  // Активная верхняя вкладка. null — открыт раунд (вкладки не активны).
   const activeMainTab = mainTabs.find(t =>
         t.path === '' ? pathname === base : pathname.startsWith(`${base}/${t.path}`)
       )?.path ?? '';
@@ -85,9 +83,8 @@ export default function TournamentPage() {
         Туров: {tournament.totalRounds}
       </Typography>
 
-      {isJudge && <TournamentActions tournament={tournament} onRefetch={refetch} />}
+      {isAdmin && <TournamentActions tournament={tournament} onRefetch={refetch} />}
 
-      {/* Верхние вкладки. value={false} — ни одна не активна, когда открыт раунд. */}
       <Tabs
         value={activeMainTab ?? false}
         onChange={(_, value) => navigate(`${base}/${value}`.replace(/\/$/, ''))}
@@ -96,7 +93,6 @@ export default function TournamentPage() {
         {mainTabs.map(t => <Tab key={t.path} label={t.label} value={t.path} />)}
       </Tabs>
 
-      {/* Раунды — независимая группа. Показываем только на «Главной». */}
       {showRoundsRow && (
         <Tabs
           value={currentRound ?? false}

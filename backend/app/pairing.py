@@ -100,7 +100,7 @@ def generate_pairings(tournament: models.Tournament, round_number: int) -> list[
         w_bal = _color_balance(tournament, white.id)
         b_bal = _color_balance(tournament, black.id)
         if w_bal > b_bal:
-            white, black = black, white  # у кого больше белых — играет чёрными
+            white, black = black, white  # у кого больше белых играет чёрными
 
         matches.append(models.Match(
             id=str(uuid4()),

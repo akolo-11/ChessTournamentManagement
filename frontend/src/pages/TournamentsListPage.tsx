@@ -12,6 +12,7 @@ import {
 } from '../utils/timeControl';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
+import CreateJudgeDialog from '../components/admin/CreateJudgeDialog';
 
 const statusLabels = {
   draft: 'Черновик',
@@ -32,6 +33,7 @@ export default function TournamentsListPage() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [judgeDialogOpen, setJudgeDialogOpen] = useState(false);
 
   useEffect(() => {
     api.listTournaments()

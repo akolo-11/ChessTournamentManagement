@@ -106,6 +106,8 @@ class TournamentOut(BaseModel): # for full view
     rounds: list[RoundOut] = []
     registration_url: str | None = Field(None, max_length=500)
 
+# Users
+
 class UserRegister(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8, max_length=128)
@@ -116,6 +118,8 @@ class UserOut(BaseModel):
     id: str
     username: str
     role: str
+    full_name: str | None
+    organization: str | None
     is_active: bool
 
 
@@ -127,3 +131,12 @@ class TokenPair(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str
+
+class UserCreateJudge(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=6, max_length=128)
+    full_name: str = Field(..., min_length=2, max_length=100)
+    organization: str = Field(..., min_length=2, max_length=100)
+
+class TournamentAssignJudge(BaseModel):
+    judge_id: str

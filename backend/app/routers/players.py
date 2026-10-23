@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
 from ..database import get_db
-from ..dependencies import get_tournament_or_404
+from ..dependencies import get_tournament_or_404, require_judge
 
 router = APIRouter(prefix="/api/tournaments/{tournament_id}/players", tags=["players"])
 
@@ -13,6 +13,7 @@ def add_player(
     data: schemas.PlayerCreate,
     tournament: models.Tournament = Depends(get_tournament_or_404),
     db: Session = Depends(get_db),
+    _: models.User = Depends(require_judge),
 ):
     try:
         return crud.add_player(db, tournament, data)
@@ -25,6 +26,7 @@ def remove_player(
     player_id: str,
     tournament: models.Tournament = Depends(get_tournament_or_404),
     db: Session = Depends(get_db),
+    _: models.User = Depends(require_judge),
 ):
     if not crud.remove_player(db, tournament.id, player_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Игрок не найден")

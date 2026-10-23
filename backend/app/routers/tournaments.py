@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
 from ..database import get_db
-from ..dependencies import get_tournament_or_404
+from ..dependencies import get_tournament_or_404, require_admin, require_judge
 
 router = APIRouter(prefix="/api/tournaments", tags=["tournaments"])
 
@@ -57,7 +57,10 @@ def get_tournament(tournament: models.Tournament = Depends(get_tournament_or_404
 
 
 @router.post("", response_model=schemas.TournamentOut, status_code=status.HTTP_201_CREATED)
-def create_tournament(data: schemas.TournamentCreate, db: Session = Depends(get_db)):
+def create_tournament(
+    data: schemas.TournamentCreate, 
+    db: Session = Depends(get_db), 
+    _: models.User = Depends(require_admin),):
     tournament = crud.create_tournament(db, data)
     return _to_out(tournament)
 
@@ -66,6 +69,7 @@ def create_tournament(data: schemas.TournamentCreate, db: Session = Depends(get_
 def delete_tournament(
     tournament: models.Tournament = Depends(get_tournament_or_404),
     db: Session = Depends(get_db),
+    _: models.User = Depends(require_admin),
 ):
     crud.delete_tournament(db, tournament.id)
 
@@ -74,6 +78,7 @@ def delete_tournament(
 def start_tournament(
     tournament: models.Tournament = Depends(get_tournament_or_404),
     db: Session = Depends(get_db),
+    _: models.User = Depends(require_judge),
 ):
     try:
         tournament = crud.start_tournament(db, tournament)
@@ -87,6 +92,7 @@ def finish_round(
     round_number: int,
     tournament: models.Tournament = Depends(get_tournament_or_404),
     db: Session = Depends(get_db),
+    _: models.User = Depends(require_judge),
 ):
     try:
         return crud.finish_round(db, tournament, round_number)
@@ -99,6 +105,7 @@ def finish_round(
 def finish_tournament(
     tournament: models.Tournament = Depends(get_tournament_or_404),
     db: Session = Depends(get_db),
+    _: models.User = Depends(require_judge),
 ):
     try:
         tournament = crud.finish_tournament(db, tournament)
@@ -111,6 +118,7 @@ def generate_pairings_endpoint(
     round_number: int,
     tournament: models.Tournament = Depends(get_tournament_or_404),
     db: Session = Depends(get_db),
+    _: models.User = Depends(require_judge),
 ):
     try:
         crud.generate_round_pairings(db, tournament, round_number)
@@ -118,5 +126,21 @@ def generate_pairings_endpoint(
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+    db.refresh(tournament)
+    return _to_out(tournament)
+
+@router.post("/{tournament_id}/assign-judge", response_model=schemas.TournamentOut)
+def assign_judge(
+    data: schemas.TournamentAssignJudge,
+    tournament: models.Tournament = Depends(get_tournament_or_404),
+    db: Session = Depends(get_db),
+    _: models.User = Depends(require_admin),
+):
+    judge = db.get(models.User, data.judge_id)
+    if not judge or judge.role != "judge":
+        raise HTTPException(400, "Пользователь не является судьей")
+        
+    tournament.judge_id = judge.id
+    db.commit()
     db.refresh(tournament)
     return _to_out(tournament)

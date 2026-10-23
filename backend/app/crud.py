@@ -163,7 +163,6 @@ def update_result(db: Session, tournament_id: str, match_id: str, result: str) -
 def generate_round_pairings(
     db: Session, tournament: models.Tournament, round_number: int,
 ) -> models.Round:
-    """Жеребьёвка для указанного раунда. Сохраняет пары в БД."""
     round_ = next((r for r in tournament.rounds if r.number == round_number), None)
     if round_ is None:
         raise LookupError("Раунд не найден")

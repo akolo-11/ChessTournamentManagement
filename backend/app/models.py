@@ -25,6 +25,9 @@ class Tournament(Base):
     max_players: Mapped[int | None] = mapped_column(Integer)
     use_rating: Mapped[bool] = mapped_column(Boolean, default=True)
 
+    judge_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    judge: Mapped[User | None] = relationship(foreign_keys=[judge_id])
+
     tc_base_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
     tc_increment_seconds: Mapped[int] = mapped_column(Integer, default=0)
     tc_label: Mapped[str | None] = mapped_column(String(50))
@@ -95,7 +98,11 @@ class User(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[str] = mapped_column(String(20), default="viewer")  # viewer | judge | admin
+    role: Mapped[str] = mapped_column(String(20), default="viewer")  # judge | admin
+
+    full_name: Mapped[str | None] = mapped_column(String(100))
+    organization: Mapped[str | None] = mapped_column(String(100))
+
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

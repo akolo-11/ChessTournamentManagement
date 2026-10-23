@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from .. import models, schemas, security
 from ..database import get_db
-from ..dependencies import get_current_user
+from ..dependencies import get_current_user, require_admin
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -66,4 +66,27 @@ def logout(
 
 @router.get("/me", response_model=schemas.UserOut)
 def me(user: models.User = Depends(get_current_user)):
+    return user
+
+@router.post("/judges", response_model=schemas.UserOut, status_code=201)
+def create_judge(
+    data: schemas.UserCreateJudge,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(require_admin),
+):
+    exists = db.scalar(select(models.User).where(models.User.username == data.username))
+    if exists:
+        raise HTTPException(400, "Имя пользователя занято")
+    
+    user = models.User(
+        id=str(uuid4()),
+        username=data.username,
+        password_hash=security.hash_password(data.password),
+        role="judge",
+        full_name=data.full_name,
+        organization=data.organization,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
     return user

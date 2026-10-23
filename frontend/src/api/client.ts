@@ -93,4 +93,7 @@ export const api = {
   request<unknown>(`/tournaments/${tid}/rounds/${roundNumber}/pairings`, {
     method: 'POST',
   }),
+  createJudge: (data: any) => request('/auth/judges', { method: 'POST', body: JSON.stringify(data) }),
+  getJudges: () => request('/auth/judges', { method: 'GET' }), // если добавите эндпоинт списка судей на бэкенде
+  assignJudge: (tid: string, judgeId: string) => request(`/tournaments/${tid}/assign-judge`, { method: 'POST', body: JSON.stringify({ judge_id: judgeId }) }),
 };

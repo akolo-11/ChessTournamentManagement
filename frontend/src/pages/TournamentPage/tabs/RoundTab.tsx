@@ -21,8 +21,7 @@ const resultLabels: Record<MatchResult, string> = {
 export default function RoundTab() {
   const { tournament, refetch } = useOutletContext<Ctx>();
   const { roundNumber } = useParams();
-  const { isJudge } = useAuth(); // <-- Берем роль судьи из хука
-  
+  const { isJudge } = useAuth();
   const round = getRound(tournament, Number(roundNumber));
 
   const [editMode, setEditMode] = useState(false);
@@ -155,7 +154,6 @@ export default function RoundTab() {
                   />
                 </TableCell>
                 
-                {/* Судья может вводить результаты */}
                 {isJudge && (
                   <TableCell align="right">
                     {savingId === m.id ? (
@@ -184,7 +182,6 @@ export default function RoundTab() {
         </Table>
       )}
 
-      {/* Судья видит кнопку завершения раунда */}
       {isJudge && isLastAnnounced && tournament.status !== 'finished' && (
         <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
           <Button
@@ -198,9 +195,9 @@ export default function RoundTab() {
       )}
 
       {isJudge && isLastAnnounced && !allResultsSet && tournament.status !== 'finished' && (
-        <Alert severity="info" sx={{ mt: 1 }}>
-          Кнопка будет доступна, когда все партии получат результат
-        </Alert>
+        <Typography sx={{ color: 'text.secondary' }}>
+              Кнопка будет доступна когда все партии получат результат
+        </Typography>
       )}
     </Box>
   );

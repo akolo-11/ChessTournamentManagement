@@ -6,12 +6,11 @@ type Role = 'viewer' | 'judge' | 'admin';
 interface User { id: string; username: string; role: Role }
 
 interface AuthState {
-  user: User | null;
+  user: { id: string; username: string; role: string; full_name?: string; organization?: string } | null;
   loading: boolean;
   isAdmin: boolean;
-  isJudge: boolean;          // админ тоже судья
-  login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string) => Promise<void>;
+  isJudge: boolean;
+  login: (u: string, p: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -43,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    try { await api.logout(); } catch { /* игнорируем */ }
+    try { await api.logout(); } catch { console.log( "почему-то не смог разлогиниться"); }
     clearTokens();
     setUser(null);
   };
@@ -54,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       isAdmin: user?.role === 'admin',
       isJudge: user?.role === 'admin' || user?.role === 'judge',
-      login, register, logout,
+      login, logout,
     }}>
       {children}
     </AuthContext.Provider>

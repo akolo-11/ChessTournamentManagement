@@ -6,7 +6,7 @@ class Settings(BaseSettings):
 
     database_url: str
     cors_origins: str = "http://localhost:5173"
-    secret_key: str = "dev-secret-change-me"
+    secret_key: str = "openssl_rand_hex_32"
     access_token_ttl_minutes: int = 30
     refresh_token_ttl_days: int = 14
 
