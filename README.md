@@ -39,35 +39,14 @@
 - Итоги турнира
 - Экспорт турнирной таблицы в Excel и PDF (в разработке)
 
-## Модель данных
+## Запуск приложения
+```bash
+docker-compose up --build
+```
 
-**Tournament** — турнир.
-Поля: id (UUID), name, type (`swiss` / `round-robin`),
-status (`draft` / `registration` / `active` / `finished`),
-start_date, end_date, start_time, location, total_rounds,
-max_players, use_rating, registration_url.
-Контроль времени хранится тремя колонками:
-`tc_base_minutes`, `tc_increment_seconds`, `tc_label`.
-
-**Player** — участник турнира.
-FK `tournament_id` → `tournaments.id` (`ON DELETE CASCADE`).
-Поля: name, rating, federation, is_active.
-
-**Round** — раунд турнира.
-FK `tournament_id` → `tournaments.id` (`ON DELETE CASCADE`).
-Поля: number, status, announced_at.
-
-**Match** — партия.
-FK `round_id` → `rounds.id` (`ON DELETE CASCADE`),
-FK `white_player_id` → `players.id` (`ON DELETE CASCADE`),
-FK `black_player_id` → `players.id` (`ON DELETE SET NULL`).
-Поля: board_number, result.
-
-### Связи
-- Tournament 1 → N Player
-- Tournament 1 → N Round
-- Round 1 → N Match
-- Match N → 2 Player (белые и чёрные)
+API:http://localhost:8000
+Swagger:http://localhost:8000/docs
+Frontend:http://localhost:5173
 
 ## Настройка окружения
 
